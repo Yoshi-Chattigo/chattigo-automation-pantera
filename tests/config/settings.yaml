@@ -1,0 +1,80 @@
+# yaml-language-server: $schema=https://json-schema.org/draft-07/schema#
+# Archivo de configuración de ambientes y perfiles para el framework de automatización.
+
+environments:
+
+  pantera:
+    base_url: "https://qa-pantera.chattigo.com"
+    browser: "chromium"
+    headless: null
+    default_timeout: 15000
+
+    profiles:
+      agente:
+        username: "agente@auto.com"
+        password: "Admin1234."
+      supervisor:
+        username: "user_pantera_supervisor"
+        password: "pass_pantera_supervisor"
+      bot:
+        username: "user_pantera_bot"
+        password: "pass_pantera_bot"
+
+
+  leones:
+    base_url: "https://qa-leones.chattigo.com"
+    browser: "chromium"
+    headless: true
+    default_timeout: 15000
+
+    profiles:
+      agente:
+        username: "user_leones_agente"
+        password: "pass_leones_agente"
+      supervisor:
+        username: "user_leones_supervisor"
+        password: "pass_leones_supervisor"
+      bot:
+        username: "user_leones_bot"
+        password: "pass_leones_bot"
+
+
+  bugs:
+    base_url: "https://qa-bugs.chattigo.com"
+    browser: "chromium"
+    headless: true
+    default_timeout: 15000
+
+    profiles:
+      agente:
+        username: "user_bugs_agente"
+        password: "pass_bugs_agente"
+      supervisor:
+        username: "user_bugs_supervisor"
+        password: "pass_bugs_supervisor"
+      bot:
+        username: "user_bugs_bot"
+        password: "pass_bugs_bot"
+
+
+  support-bugs:
+    base_url: "https://support-bugs.chattigo.com"
+    browser: "chromium"
+    headless: true
+    default_timeout: 15000
+
+    profiles:
+      agente:
+        username: "user_support_agente"
+        password: "pass_support_agente"
+      supervisor:
+        username: "user_support_supervisor"
+        password: "pass_support_supervisor"
+      bot:
+        username: "user_support_bot"
+        password: "pass_support_bot"
+
+
+
+
+

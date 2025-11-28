@@ -1,0 +1,53 @@
+steps:
+  # 1. Instalar dependencias
+  - name: python:3.12
+    id: install-deps
+    entrypoint: bash
+    args:
+      - -c
+      - |
+        pip install --upgrade pip
+        pip install -r requirements.txt
+
+  # 2. Instalar navegadores Playwright y sus dependencias del SO
+  - name: python:3.12
+    id: install-playwright
+    entrypoint: bash
+    args:
+      - -c
+      - |
+        python -m playwright install --with-deps chromium
+
+  # 3. Ejecutar pruebas
+  - name: python:3.12
+    id: run-tests
+    entrypoint: bash
+    args:
+      - -c
+      - |
+        pytest --env=$_ENV --profile=$_PROFILE --alluredir=allure-results
+
+  # 4. Generar reporte Allure
+  - name: ghcr.io/allure-framework/allure-docker-service/allure:2.29.0
+    id: generate-allure
+    entrypoint: bash
+    args:
+      - -c
+      - |
+        allure generate allure-results --clean -o allure-report
+
+  # 5. Subir reporte final
+  - name: gcr.io/cloud-builders/gsutil
+    id: upload
+    args:
+      - -m
+      - cp
+      - -r
+      - allure-report/*
+      - gs://qa-allure-report-storage-automation/$_ENV/$_PROFILE/
+
+substitutions:
+  _ENV: default
+  _PROFILE: default
+
+timeout: "1200s"

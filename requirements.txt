@@ -1,0 +1,16 @@
+pytest
+playwright
+pytest-playwright
+pytest-html
+pytest-json-report
+allure-pytest
+PyYAML
+
+discord.py
+google-api-python-client
+google-auth
+google-auth-httplib2
+google-auth-oauthlib
+google-cloud-build
+
+

@@ -1,0 +1,11 @@
+bot/local_config.py
+.venv/
+__pycache__/
+*.pyc
+*.log
+.DS_Store
+
+
+# Secrets
+service-account.json
+bot/service-account.json
