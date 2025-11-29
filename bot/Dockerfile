@@ -2,12 +2,17 @@ FROM python:3.11-slim
 
 WORKDIR /app
 
-# Instalar dependencias de Python
-COPY requirements.txt .
+# Copiar requirements
+COPY bot/requirements.txt .
+
+# Instalar dependencias
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Copiar bot y archivos necesarios
-COPY . .
+# Copiar código del bot
+COPY bot/ .
 
-# Ejecutar bot
+# Mostrar contenido del contenedor para DEBUG
+RUN ls -la /app
+
+# Comando de ejecución
 CMD ["python", "discord_bot.py"]

@@ -2,9 +2,9 @@ steps:
   - name: "gcr.io/cloud-builders/docker"
     args: [
       "build",
-      "-t", "gcr.io/$PROJECT_ID/discord-bot",
       "-f", "bot/Dockerfile",
-      "bot"
+      "-t", "gcr.io/$PROJECT_ID/discord-bot",
+      "."
     ]
 
   - name: "gcr.io/cloud-builders/docker"
