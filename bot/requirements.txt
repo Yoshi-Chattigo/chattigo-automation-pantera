@@ -1,0 +1,5 @@
+discord.py
+google-cloud-build
+google-cloud-storage
+google-auth
+google-cloud-core
