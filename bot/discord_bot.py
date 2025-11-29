@@ -1,3 +1,9 @@
+import os
+import json
+import asyncio
+import threading
+from http.server import HTTPServer, BaseHTTPRequestHandler
+
 import discord
 from discord.ext import commands
 from discord import app_commands
@@ -7,20 +13,20 @@ from google.oauth2 import service_account
 from google.cloud import storage
 
 from datetime import datetime
-import json
-import asyncio
 
 # ===============================
-# CONFIG LOCAL (TOKEN + CHANNEL)
+# CONFIG (ENV VARS PARA CLOUD RUN)
 # ===============================
-from local_config import DISCORD_BOT_TOKEN, DISCORD_CHANNEL_ID
+
+DISCORD_BOT_TOKEN = os.getenv("DISCORD_BOT_TOKEN")
+CHANNEL_ID = int(os.getenv("DISCORD_CHANNEL_ID"))
 
 PROJECT_ID = "automation-chattigo"
 BUCKET = "qa-allure-report-storage-automation"
 
-# Service account
+# Service Account desde archivo incluido en el contenedor
 credentials = service_account.Credentials.from_service_account_file(
-    "bot/service-account.json"
+    "service-account.json"
 )
 
 storage_client = storage.Client(
@@ -28,10 +34,14 @@ storage_client = storage.Client(
     credentials=credentials
 )
 
-intents = discord.Intents.default()
-bot = commands.Bot(command_prefix="/", intents=intents)
+# ===============================
+# DISCORD BOT
+# ===============================
 
-CHANNEL_ID = DISCORD_CHANNEL_ID  # canal oficial donde se reporta todo
+intents = discord.Intents.default()
+intents.message_content = True  # necesario para slash commands
+
+bot = commands.Bot(command_prefix="/", intents=intents)
 
 
 # ===============================
@@ -148,22 +158,23 @@ class PerfilView(discord.ui.View):
 
     @discord.ui.button(label="agente", style=discord.ButtonStyle.success)
     async def agente(self, interaction, button):
+        await interaction.response.send_message(f"Ejecutando agente en {self.ambiente}…", ephemeral=True)
         await ejecutar_en_cloud_build(self.ambiente, "agente")
 
     @discord.ui.button(label="bot", style=discord.ButtonStyle.primary)
     async def bot(self, interaction, button):
+        await interaction.response.send_message(f"Ejecutando bot en {self.ambiente}…", ephemeral=True)
         await ejecutar_en_cloud_build(self.ambiente, "bot")
 
     @discord.ui.button(label="supervisor", style=discord.ButtonStyle.secondary)
     async def supervisor(self, interaction, button):
+        await interaction.response.send_message(f"Ejecutando supervisor en {self.ambiente}…", ephemeral=True)
         await ejecutar_en_cloud_build(self.ambiente, "supervisor")
 
 
 async def mostrar_selector_perfil(interaction, ambiente):
-    channel = bot.get_channel(CHANNEL_ID)
-    await channel.send(
-        f"🌍 Ambiente seleccionado: `{ambiente}`\n"
-        "Ahora selecciona el perfil:",
+    await interaction.response.send_message(
+        f"🌍 Ambiente seleccionado: `{ambiente}`\nSelecciona el perfil:",
         view=PerfilView(ambiente)
     )
 
@@ -194,13 +205,12 @@ class AmbienteView(discord.ui.View):
 
 
 # ===============================
-# /auto
+# /auto COMMAND
 # ===============================
 
 @bot.tree.command(name="auto", description="Ejecuta pruebas automáticas")
 async def auto(interaction: discord.Interaction):
-    channel = bot.get_channel(CHANNEL_ID)
-    await channel.send("🌍 Selecciona el ambiente:", view=AmbienteView())
+    await interaction.response.send_message("🌍 Selecciona el ambiente:", view=AmbienteView())
 
 
 # ===============================
@@ -214,7 +224,35 @@ async def on_ready():
 
 
 # ===============================
+# HTTP HEALTH SERVER (para Cloud Run)
+# ===============================
+
+class HealthHandler(BaseHTTPRequestHandler):
+    def do_GET(self):
+        self.send_response(200)
+        self.end_headers()
+        self.wfile.write(b"ok")
+
+    def log_message(self, format, *args):
+        # Evita spam de logs
+        return
+
+
+def start_health_server():
+    port = int(os.environ.get("PORT", "8080"))
+    server = HTTPServer(("0.0.0.0", port), HealthHandler)
+    print(f"Health server escuchando en puerto {port}")
+    server.serve_forever()
+
+
+# ===============================
 # RUN
 # ===============================
 
-bot.run(DISCORD_BOT_TOKEN)
+if __name__ == "__main__":
+    # Levantar servidor HTTP en background para satisfacer a Cloud Run
+    t = threading.Thread(target=start_health_server, daemon=True)
+    t.start()
+
+    # Ejecutar el bot de Discord (hilo principal)
+    bot.run(DISCORD_BOT_TOKEN)
