@@ -12,5 +12,6 @@ google-auth
 google-auth-httplib2
 google-auth-oauthlib
 google-cloud-build
-
+google-cloud-storage
+google-cloud-core
 
