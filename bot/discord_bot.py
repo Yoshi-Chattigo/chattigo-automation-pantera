@@ -8,15 +8,14 @@ import discord
 from discord.ext import commands
 from discord import app_commands
 
-from google.cloud.devtools import cloudbuild_v1
-from google.oauth2 import service_account
-from google.cloud import storage
 
+from google.cloud.devtools import cloudbuild_v1
+from google.cloud import storage
 from datetime import datetime
+import google.auth
 
 # ===============================
 # CONFIG (ENV VARS PARA CLOUD RUN)
-# ===============================
 
 DISCORD_BOT_TOKEN = os.getenv("DISCORD_BOT_TOKEN")
 CHANNEL_ID = int(os.getenv("DISCORD_CHANNEL_ID"))
@@ -24,15 +23,13 @@ CHANNEL_ID = int(os.getenv("DISCORD_CHANNEL_ID"))
 PROJECT_ID = "automation-chattigo"
 BUCKET = "qa-allure-report-storage-automation"
 
-# Service Account desde archivo incluido en el contenedor
-credentials = service_account.Credentials.from_service_account_file(
-    "service-account.json"
-)
+# 🌟 Credenciales automáticas de Cloud Run — sin archivos
+credentials, _ = google.auth.default()
 
-storage_client = storage.Client(
-    project=PROJECT_ID,
-    credentials=credentials
-)
+cloudbuild_client = cloudbuild_v1.CloudBuildClient(credentials=credentials)
+storage_client = storage.Client(credentials=credentials)
+
+
 
 # ===============================
 # DISCORD BOT

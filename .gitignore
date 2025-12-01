@@ -9,7 +9,7 @@ __pycache__/
 # Secrets
 service-account.json
 bot/service-account.json
-gi
+
 
 # Playwright
 node_modules/

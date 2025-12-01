@@ -1,4 +1,5 @@
 steps:
+  # 1) Build de la imagen usando el Dockerfile en bot/
   - name: "gcr.io/cloud-builders/docker"
     args: [
       "build",
@@ -7,17 +8,22 @@ steps:
       "."
     ]
 
+  # 2) Push de la imagen al registry
   - name: "gcr.io/cloud-builders/docker"
     args: ["push", "gcr.io/$PROJECT_ID/discord-bot"]
 
+  # 3) Deploy a Cloud Run
   - name: "gcr.io/google.com/cloudsdktool/cloud-sdk"
     entrypoint: gcloud
-    args: [
+    args: [º
       "run", "deploy", "discord-bot",
       "--image=gcr.io/$PROJECT_ID/discord-bot",
       "--region=us-central1",
       "--platform=managed",
-      "--allow-unauthenticated"
+      "--allow-unauthenticated",
+      "--min-instances=1",
+      "--max-instances=1",
+      "--memory=512Mi"
     ]
 
 images:
