@@ -212,8 +212,9 @@ class ProfileView(View):
                             
                             # Custom file name mapping
                             file_name_mapping = {
-                                "tests/agente/test_inbound_email.py": "Chat- Mail",
-                                "tests/agente/test_outbound_agente.py": "Outbound - Envio HSM"
+                                "tests/agente/test_inbound_email.py": "Chat - Mail",
+                                "tests/agente/test_outbound_agente.py": "Outbound - Envio HSM",
+                                "tests/agente/test_agent_status.py": "Agente"
                             }
                             
                             display_name = file_name_mapping.get(file_path)
