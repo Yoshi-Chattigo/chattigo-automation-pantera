@@ -1,0 +1,12 @@
+playwright
+pytest
+pytest-playwright
+pytest-html
+python-dotenv
+allure-pytest
+pytest-xdist
+flake8
+black
+discord.py
+google-cloud-storage
+pytest-json-report
