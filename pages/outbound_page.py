@@ -97,8 +97,8 @@ class OutboundPage(BasePage):
         # Use get_by_role as per codegen
         self.page.get_by_role("button", name="Seleccionar...").click()
         
-        self.fill(self.TEMPLATE_SEARCH_INPUT, "bien") # Searching partial text as per codegen
-        self.click(self.TEMPLATE_OPTION, force=True)
+        self.fill(self.TEMPLATE_SEARCH_INPUT, template_name)
+        self.click(f"button:has-text('{template_name}')", force=True)
         
         self.page.wait_for_timeout(1000)
         
