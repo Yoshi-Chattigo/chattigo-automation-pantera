@@ -70,13 +70,10 @@ def test_receive_email(page):
 
 @pytest.mark.email
 def test_chat_closure(page):
-    # 1. Send Email (to ensure there is a chat to close)
+    # 1. Instantiate EmailSender to get the sender email address (for filtering)
     email_sender = EmailSender()
-    subject = f"Test Automation Closure {time.time()}"
-    body = "This is a test email for chat closure."
-    to_email = "qapantera@chattigo.com"
-    
-    email_sender.send_email(subject, body, to_email)
+    # Note: We do NOT send a new email here. We rely on the email sent by the previous test (test_receive_email)
+    # or any existing email from this sender. This makes the tests "complementary".
     
     # 2. Login
     login_page = LoginPage(page)
