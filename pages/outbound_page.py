@@ -71,41 +71,45 @@ class OutboundPage(BasePage):
         file_chooser.set_files(file_path)
         
         # Wait for file to be processed
-        self.page.wait_for_timeout(2000)
+        # Increased wait for Cloud Run environment
+        self.page.wait_for_timeout(5000)
         
         # 1. Click 'Guardar' in the upload modal
         self.logger.info("Clicking first 'Guardar' (Modal)")
-        # Use get_by_role as per codegen to ensure we target the correct button
-        self.page.get_by_role("button", name="Guardar").click()
+        self.page.get_by_role("button", name="Guardar").click(force=True)
         
         self.page.wait_for_timeout(2000)
         
         # 2. Click 'Guardar' to continue (Contact List Section)
-        # Using selector from codegen: page.locator("#scrollbar").get_by_text("Guardar")
         self.logger.info("Clicking second 'Guardar' (Contact List Section)")
-        self.page.locator("#scrollbar").get_by_text("Guardar").click()
+        self.page.locator("#scrollbar").get_by_text("Guardar").click(force=True)
         
         self.page.wait_for_timeout(2000)
 
     def select_template(self, template_name: str):
         self.logger.info(f"Selecting template: {template_name}")
         
-        # Scroll down using keyboard to ensure template dropdown is visible
         self.page.keyboard.press("PageDown")
-        self.page.wait_for_timeout(500)
+        self.page.wait_for_timeout(1000)
         
         # Use get_by_role as per codegen
-        self.page.get_by_role("button", name="Seleccionar...").click()
+        # Add wait to ensure button is interactable
+        self.logger.info("Opening Template dropdown...")
+        self.page.get_by_role("button", name="Seleccionar...").click(force=True)
         
-        self.fill(self.TEMPLATE_SEARCH_INPUT, "bien") # Searching partial text as per codegen
+        # Wait for input to be visible
+        self.page.wait_for_selector(self.TEMPLATE_SEARCH_INPUT, state="visible", timeout=5000)
+        
+        self.logger.info(f"Searching for template: {template_name}")
+        self.fill(self.TEMPLATE_SEARCH_INPUT, "bien") 
         
         # Determine the dynamic selector based on the template name provided
-        # Or, if searching "bien" brings up the list, we click the specific one.
-        # It seems the user wants 'bienvenida_rapida_auto'
-        # The selector was: button:has-text('bienvenida_rapida_hija1 -')
-        # We should make it match the input argument.
-        
         template_selector = f"button:has-text('{template_name}')"
+        
+        # Wait for the option to appear
+        self.logger.info(f"Waiting for template option: {template_selector}")
+        self.page.wait_for_selector(template_selector, state="visible", timeout=10000)
+        
         self.logger.info(f"Clicking template option: {template_selector}")
         self.click(template_selector, force=True)
         
