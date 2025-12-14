@@ -42,24 +42,51 @@ class OutboundPage(BasePage):
 
     def select_channel(self, channel_name: str):
         self.logger.info(f"Selecting channel: {channel_name}")
-        # Wait for the UI to update after campaign selection
         self.page.wait_for_timeout(2000)
         
-        # Try to click the 'Seleccionar' button.
-        # We need to be careful to click the *correct* "Seleccionar" button.
-        # Assuming the first one (Campaign) is now displaying the campaign name, 
-        # the next available "Seleccionar" should be the Channel one.
-        # Let's try to target the dropdown specifically.
-        # If possible, verify if there is a specific ID or parent div.
-        # Lacking that, we wait for the button.
+        # Strategy: Target the specific dropdown for Channel
+        # If we can't find a unique ID, we search for the 'Canal' label or similar context.
+        # Since we don't have the full DOM, we'll try a more robust generic approach.
         
-        self.click("button:has-text('Seleccionar')", force=True)
+        # 1. Ensure any previous dropdown is closed (click body?) - skipping for now to avoid side effects
+        
+        # 2. Click "Seleccionar"
+        # We assume the first "Seleccionar" (Campaign) might still be visible or changed text.
+        # We'll try to click specifically the button that is *not* the campaign one if possible.
+        # But simpler: click unique "Seleccionar" if text changed, or the *second* one.
+        
+        try:
+            # Try to find the button associated with 'Canal' if label exists, otherwise wait carefully
+            # Fallback: Click the button that has text "Seleccionar" and appear *after* the campaign one.
+            # Using nth=1 is risky if campaign text changes to "Seleccionar" on deselection.
+            # Best bet: Wait for campaign selector to NOT be "Seleccionar" (it should be the campaign name).
+            
+            # Wait for campaign selection to be applied (text change)
+            self.page.wait_for_function("document.querySelector('#campaign button').innerText !== 'Seleccionar'", timeout=5000)
+        except:
+            self.logger.warning("Campaign button text might not have updated or selector differs.")
+
+        # Now click the active "Seleccionar"
+        # We explicitly wait for it to be enabled
+        btn_selector = "button:has-text('Seleccionar')"
+        self.page.wait_for_selector(btn_selector, state="visible", timeout=10000)
+        
+        # In headless, sometimes a force click is better for custom dropdowns
+        self.click(btn_selector, force=True)
         self.page.wait_for_timeout(1000)
         
-        # Wait for the option to be visible before clicking
+        # 3. Wait for option
         target_option = f"p:has-text('{channel_name}')"
-        self.page.wait_for_selector(target_option, state="visible", timeout=10000)
-        self.click(target_option, force=True)
+        try:
+            self.page.wait_for_selector(target_option, state="visible", timeout=10000)
+            self.click(target_option, force=True)
+        except Exception as e:
+            self.logger.error(f"Failed to find channel option '{channel_name}'. Retrying dropdown click...")
+            # Retry opening dropdown once
+            self.click(btn_selector, force=True)
+            self.page.wait_for_timeout(1000)
+            self.click(target_option, force=True)
+
         self.page.wait_for_timeout(1000)
 
     def upload_contact_list(self, file_path: str):
