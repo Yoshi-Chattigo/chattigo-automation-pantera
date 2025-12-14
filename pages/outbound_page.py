@@ -101,7 +101,10 @@ class OutboundPage(BasePage):
         self.page.wait_for_selector(self.TEMPLATE_SEARCH_INPUT, state="visible", timeout=5000)
         
         self.logger.info(f"Searching for template: {template_name}")
-        self.fill(self.TEMPLATE_SEARCH_INPUT, "bien") 
+        # Clear input first just in case
+        self.page.locator(self.TEMPLATE_SEARCH_INPUT).clear()
+        # Use type with delay to ensure the frontend filter triggers correctly
+        self.page.locator(self.TEMPLATE_SEARCH_INPUT).type("bien", delay=100) 
         
         # Determine the dynamic selector based on the template name provided
         template_selector = f"button:has-text('{template_name}')"
