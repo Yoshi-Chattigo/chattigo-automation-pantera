@@ -67,3 +67,7 @@ def test_receive_email(page):
     expect(page.locator(f"text={body}").first).to_be_visible(timeout=10000)
     
     print("Email content verified successfully!")
+
+    # 4. Finalize Chat
+    print("Finalizing chat...")
+    dashboard_page.finalize_chat()

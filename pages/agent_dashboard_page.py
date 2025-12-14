@@ -158,3 +158,26 @@ class AgentDashboardPage(BasePage):
         except Exception as e:
             self.logger.error(f"Logout failed: {e}")
             raise e
+    def finalize_chat(self, reason: str = "Cierre"):
+        """
+        Finalizes the current chat.
+        Args:
+            reason: The reason for closing the chat (e.g., 'Cierre').
+        """
+        self.logger.info("Initiating chat finalization...")
+        
+        # 1. Click 'Finalizar' button
+        self.logger.info("Clicking 'Finalizar' button...")
+        self.page.get_by_role("button", name="Finalizar").click()
+        
+        # 2. Select reason from the list
+        self.logger.info(f"Selecting reason: {reason}")
+        # Wait for the modal/list to appear
+        self.page.wait_for_timeout(1000) 
+        self.page.get_by_role("listitem").filter(has_text=reason).click()
+        
+        # 3. Confirm 'Finalizar chat'
+        self.logger.info("Confirming 'Finalizar chat'...")
+        self.page.locator("a").filter(has_text="Finalizar chat").click()
+        
+        self.logger.info("Chat finalized successfully.")
