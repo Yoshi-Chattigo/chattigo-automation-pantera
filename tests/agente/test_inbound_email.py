@@ -68,6 +68,31 @@ def test_receive_email(page):
     
     print("Email content verified successfully!")
 
+@pytest.mark.email
+def test_chat_closure(page):
+    # 1. Send Email (to ensure there is a chat to close)
+    email_sender = EmailSender()
+    subject = f"Test Automation Closure {time.time()}"
+    body = "This is a test email for chat closure."
+    to_email = "qapantera@chattigo.com"
+    
+    email_sender.send_email(subject, body, to_email)
+    
+    # 2. Login
+    login_page = LoginPage(page)
+    dashboard_page = AgentDashboardPage(page)
+    
+    login_page.navigate(Config.BASE_URL)
+    login_page.login(Config.USERNAME, Config.PASSWORD)
+    
+    dashboard_page.handle_popup()
+    
+    # 3. Find and Open Chat
+    print(f"Waiting for chat card from: {email_sender.sender_email}")
+    chat_card = page.locator("chat-card").filter(has_text=email_sender.sender_email).first
+    expect(chat_card).to_be_visible(timeout=60000)
+    chat_card.click()
+    
     # 4. Finalize Chat
     print("Finalizing chat...")
     dashboard_page.finalize_chat()

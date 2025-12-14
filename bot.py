@@ -201,6 +201,7 @@ class ProfileView(View):
                                 "test_agent_status_timer": "Contador de estado Online",
                                 "test_agent_status_break": "Activacion de estado descanso",
                                 "test_receive_email": "recibo de mail -agente",
+                                "test_chat_closure": "Cierre chat mail",
                                 "test_bienvenida_rapida": "bienvenida_rapida"
                             }
                             
