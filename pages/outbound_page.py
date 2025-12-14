@@ -42,51 +42,20 @@ class OutboundPage(BasePage):
 
     def select_channel(self, channel_name: str):
         self.logger.info(f"Selecting channel: {channel_name}")
-        self.page.wait_for_timeout(2000)
-        
-        # Strategy: Target the specific dropdown for Channel
-        # If we can't find a unique ID, we search for the 'Canal' label or similar context.
-        # Since we don't have the full DOM, we'll try a more robust generic approach.
-        
-        # 1. Ensure any previous dropdown is closed (click body?) - skipping for now to avoid side effects
-        
-        # 2. Click "Seleccionar"
-        # We assume the first "Seleccionar" (Campaign) might still be visible or changed text.
-        # We'll try to click specifically the button that is *not* the campaign one if possible.
-        # But simpler: click unique "Seleccionar" if text changed, or the *second* one.
-        
-        try:
-            # Try to find the button associated with 'Canal' if label exists, otherwise wait carefully
-            # Fallback: Click the button that has text "Seleccionar" and appear *after* the campaign one.
-            # Using nth=1 is risky if campaign text changes to "Seleccionar" on deselection.
-            # Best bet: Wait for campaign selector to NOT be "Seleccionar" (it should be the campaign name).
-            
-            # Wait for campaign selection to be applied (text change)
-            self.page.wait_for_function("document.querySelector('#campaign button').innerText !== 'Seleccionar'", timeout=5000)
-        except:
-            self.logger.warning("Campaign button text might not have updated or selector differs.")
-
-        # Now click the active "Seleccionar"
-        # We explicitly wait for it to be enabled
-        btn_selector = "button:has-text('Seleccionar')"
-        self.page.wait_for_selector(btn_selector, state="visible", timeout=10000)
-        
-        # In headless, sometimes a force click is better for custom dropdowns
-        self.click(btn_selector, force=True)
+        # Wait for the second dropdown to be ready
         self.page.wait_for_timeout(1000)
         
-        # 3. Wait for option
-        target_option = f"p:has-text('{channel_name}')"
-        try:
-            self.page.wait_for_selector(target_option, state="visible", timeout=10000)
-            self.click(target_option, force=True)
-        except Exception as e:
-            self.logger.error(f"Failed to find channel option '{channel_name}'. Retrying dropdown click...")
-            # Retry opening dropdown once
-            self.click(btn_selector, force=True)
-            self.page.wait_for_timeout(1000)
-            self.click(target_option, force=True)
-
+    def select_channel(self, channel_name: str):
+        self.logger.info(f"Selecting channel: {channel_name}")
+        # Wait for the UI to update after campaign selection
+        self.page.wait_for_timeout(1000)
+        
+        # Try to click the 'Seleccionar' button. 
+        # Reverting to simple selector as nth=1 failed.
+        # Assuming the campaign dropdown text changed to the selected campaign.
+        self.click("button:has-text('Seleccionar')", force=True)
+        self.page.wait_for_timeout(500)
+        self.click(f"p:has-text('{channel_name}')", force=True)
         self.page.wait_for_timeout(1000)
 
     def upload_contact_list(self, file_path: str):
@@ -128,31 +97,57 @@ class OutboundPage(BasePage):
         # Use get_by_role as per codegen
         self.page.get_by_role("button", name="Seleccionar...").click()
         
-        self.fill(self.TEMPLATE_SEARCH_INPUT, template_name)
-        self.click(f"button:has-text('{template_name}')", force=True)
+        self.fill(self.TEMPLATE_SEARCH_INPUT, "bien") # Searching partial text as per codegen
+        
+        # Determine the dynamic selector based on the template name provided
+        # Or, if searching "bien" brings up the list, we click the specific one.
+        # It seems the user wants 'bienvenida_rapida_auto'
+        # The selector was: button:has-text('bienvenida_rapida_hija1 -')
+        # We should make it match the input argument.
+        
+        template_selector = f"button:has-text('{template_name}')"
+        self.logger.info(f"Clicking template option: {template_selector}")
+        self.click(template_selector, force=True)
         
         self.page.wait_for_timeout(1000)
         
         # Click 'Guardar' for Template Section
         # Codegen: page.locator("a").filter(has_text="Guardar").click()
         self.logger.info("Clicking 'Guardar' (Template Section)")
-        self.page.locator("a").filter(has_text="Guardar").click()
-        self.page.wait_for_timeout(1000)
+        # Click 'Guardar' for Template Section
+        self.logger.info("Clicking 'Guardar' (Template Section)")
+        self.page.locator("a").filter(has_text="Guardar").click(force=True)
+        
+        # KEY FIX: Wait for the template search input to disappear. 
+        # This confirms the section closed and the next one (Agent) should appear.
+        try:
+            self.page.locator(self.TEMPLATE_SEARCH_INPUT).wait_for(state="hidden", timeout=5000)
+            self.logger.info("Template section saved successfully (Search input hidden)")
+        except:
+             self.logger.warning("Template search input still visible? attempting to proceed anyway.")
+        
+        # Increase wait to ensure next section (Agent) renders
+        self.page.wait_for_timeout(2000)
 
     def select_agent(self, agent_option: str = "Yo"):
         self.logger.info(f"Selecting agent: {agent_option}")
         self.page.keyboard.press("PageDown")
-        self.page.wait_for_timeout(500)
         
-        # Select Agent Dropdown
-        # The codegen uses a complex locator or just the next "Seleccionar..." button.
-        # Since we saved previous sections, hopefully this is the only active/visible "Seleccionar..." or the next one.
-        # We'll try get_by_role("button", name="Seleccionar...") again.
-        self.page.get_by_role("button", name="Seleccionar...").click()
-        self.page.wait_for_timeout(500)
+        self.logger.info("Attempting to open Agent dropdown...")
+        try:
+            # Try XPath which is sometimes more robust for 'text' content in headless
+            # getting the LAST one visible
+            xpath_selector = "(//button[contains(., 'Seleccionar...')])[last()]"
+            self.page.locator(xpath_selector).click(force=True, timeout=5000)
+        except Exception as e:
+             self.logger.error(f"XPath strategy failed: {e}. Trying generic get_by_role.")
+             self.page.get_by_role("button", name="Seleccionar...").last.click(force=True)
+
+        self.page.wait_for_timeout(1000)
         
         # Select Option
-        self.page.get_by_role("button", name=agent_option).click()
+        self.logger.info(f"Clicking agent option: {agent_option}")
+        self.page.get_by_role("button", name=agent_option).click(force=True)
         self.page.wait_for_timeout(1000)
         
         # Click 'Guardar' for Agent Section

@@ -15,12 +15,6 @@ class LoginPage(BasePage):
         self.fill(self.PASSWORD_INPUT, password)
         self.logger.info("Password filled, clicking login button")
         self.click(self.LOGIN_BUTTON)
-        # Wait for navigation to start/complete to ensure we don't return too early
-        try:
-            self.page.wait_for_url("**/dashboard**", timeout=30000)
-            self.logger.info("Login successful, reached dashboard")
-        except:
-            self.logger.warning("Timed out waiting for dashboard URL after login click")
 
     def get_error_message(self):
         return self.get_text(self.ERROR_MESSAGE)
