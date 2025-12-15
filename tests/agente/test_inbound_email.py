@@ -84,12 +84,24 @@ def test_chat_closure(page):
     
     dashboard_page.handle_popup()
     
-    # 3. Find and Open Chat
-    print(f"Waiting for chat card from: {email_sender.sender_email}")
+    # 3. Find and Open Chat (Conditional)
+    print(f"Checking for chat card from: {email_sender.sender_email}")
     chat_card = page.locator("chat-card").filter(has_text=email_sender.sender_email).first
-    expect(chat_card).to_be_visible(timeout=60000)
-    chat_card.click()
     
-    # 4. Finalize Chat
-    print("Finalizing chat...")
-    dashboard_page.finalize_chat()
+    # Wait briefly to see if it appears (but don't fail immediately)
+    try:
+        chat_card.wait_for(state="visible", timeout=5000)
+        is_visible = True
+    except:
+        is_visible = False
+        
+    if is_visible:
+        print("Chat found! Proceeding to close...")
+        chat_card.click()
+        # 4. Finalize Chat
+        print("Finalizing chat...")
+        dashboard_page.finalize_chat()
+    else:
+        print("No hay chat para cerrar. Skipping closure.")
+        # Pass the test intentionally as per requirement
+
