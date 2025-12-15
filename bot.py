@@ -202,7 +202,8 @@ class ProfileView(View):
                                 "test_agent_status_break": "Activacion de estado descanso",
                                 "test_receive_email": "recibo de mail -agente",
                                 "test_chat_closure": "Cierre chat mail",
-                                "test_bienvenida_rapida": "bienvenida_rapida"
+                                "test_bienvenida_rapida": "bienvenida_rapida",
+                                "test_outbound_document_agent": "Outbound - Envio HSM PDF"
                             }
                             
                             test['short_name'] = test_name_mapping.get(test_name, test_name)

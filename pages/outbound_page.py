@@ -86,7 +86,7 @@ class OutboundPage(BasePage):
         
         self.page.wait_for_timeout(2000)
 
-    def select_template(self, template_name: str):
+    def select_template(self, template_name: str, attachment_path: str = None):
         self.logger.info(f"Selecting template: {template_name}")
         
         self.page.keyboard.press("PageDown")
@@ -104,7 +104,7 @@ class OutboundPage(BasePage):
         # Clear input first just in case
         self.page.locator(self.TEMPLATE_SEARCH_INPUT).clear()
         # Use type with delay to ensure the frontend filter triggers correctly
-        self.page.locator(self.TEMPLATE_SEARCH_INPUT).type("bien", delay=100) 
+        self.page.locator(self.TEMPLATE_SEARCH_INPUT).type("bien" if "bienvenida" in template_name else "qa", delay=100)
         
         # Determine the dynamic selector based on the template name provided
         template_selector = f"button:has-text('{template_name}')"
@@ -117,10 +117,33 @@ class OutboundPage(BasePage):
         self.click(template_selector, force=True)
         
         self.page.wait_for_timeout(1000)
+
+        # Handle Attachment if provided
+        if attachment_path:
+            self.logger.info(f"Uploading attachment from: {attachment_path}")
+            
+            # Ensure the file exists before trying to upload
+            if not os.path.exists(attachment_path):
+                raise FileNotFoundError(f"Attachment file not found at: {attachment_path}")
+
+            # Using force=True for robustness
+            attach_btn_name = "Adjunta un archivo"
+            try:
+                self.logger.info("Waiting for file chooser event...")
+                with self.page.expect_file_chooser() as fc_info:
+                    # Click the button to trigger the file dialog
+                    self.page.get_by_role("button", name=attach_btn_name).click(force=True)
+                
+                file_chooser = fc_info.value
+                self.logger.info(f"File chooser opened. Setting files: {attachment_path}")
+                file_chooser.set_files(attachment_path)
+                
+                self.logger.info("Attachment uploaded successfully.")
+                self.page.wait_for_timeout(2000) # Wait for upload
+            except Exception as e:
+                self.logger.error(f"Error uploading attachment: {e}")
+                raise e
         
-        # Click 'Guardar' for Template Section
-        # Codegen: page.locator("a").filter(has_text="Guardar").click()
-        self.logger.info("Clicking 'Guardar' (Template Section)")
         # Click 'Guardar' for Template Section
         self.logger.info("Clicking 'Guardar' (Template Section)")
         self.page.locator("a").filter(has_text="Guardar").click(force=True)
