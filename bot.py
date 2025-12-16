@@ -203,7 +203,8 @@ class ProfileView(View):
                                 "test_receive_email": "recibo de mail -agente",
                                 "test_chat_closure": "Cierre chat mail",
                                 "test_bienvenida_rapida": "bienvenida_rapida",
-                                "test_outbound_document_agent": "qa_documento"
+                                "test_outbound_document_agent": "qa_documento",
+                                "test_outbound_image_agent": "qa_imagen"
                             }
                             
                             test['short_name'] = test_name_mapping.get(test_name, test_name)
