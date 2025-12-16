@@ -14,13 +14,25 @@ def test_agent_status_timer(login_page):
 
     # 2. Verify Dashboard
     # 2. Verify Dashboard
+    # 2. Verify Dashboard
+    # 2. Verify Dashboard
     try:
+        # Improve stability: Wait for a dashboard element to verify login success BEFORE URL check
+        # This handles the transition delay or potential retries finishing just as the page loads
+        print("Waiting for dashboard element to appear...")
+        # Use a more generic container that should load early
+        login_page.page.wait_for_selector("app-main-dashboard", state="visible", timeout=40000)
+        
         expect(login_page.page).to_have_url(re.compile(".*dashboard/agent"), timeout=30000)
     except AssertionError:
         # Check if error message is visible
         if login_page.page.is_visible(login_page.ERROR_MESSAGE):
             error_text = login_page.get_text(login_page.ERROR_MESSAGE)
             raise AssertionError(f"Login failed with error: {error_text}")
+        
+        # Capture current URL if assertion failed
+        current_url = login_page.page.url
+        print(f"Login failed. Current URL: {current_url}")
         raise
 
     dashboard_page = AgentDashboardPage(login_page.page)
