@@ -80,7 +80,8 @@ class ProfileView(View):
             
             try:
                 # Wait for the process with a timeout
-                stdout, stderr = await asyncio.wait_for(process.communicate(), timeout=300)
+                # Increased timeout to 900s (15 min) to accommodate growing test suite
+                stdout, stderr = await asyncio.wait_for(process.communicate(), timeout=900)
                 stdout = stdout.decode()
                 stderr = stderr.decode()
                 returncode = process.returncode
