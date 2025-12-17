@@ -86,7 +86,7 @@ class OutboundPage(BasePage):
         
         self.page.wait_for_timeout(2000)
 
-    def select_template(self, template_name: str, attachment_path: str = None):
+    def select_template(self, template_name: str, attachment_path: str = None, attachment_url: str = None):
         self.logger.info(f"Selecting template: {template_name}")
         
         self.page.keyboard.press("PageDown")
@@ -104,7 +104,11 @@ class OutboundPage(BasePage):
         # Clear input first just in case
         self.page.locator(self.TEMPLATE_SEARCH_INPUT).clear()
         # Use type with delay to ensure the frontend filter triggers correctly
-        self.page.locator(self.TEMPLATE_SEARCH_INPUT).type("bien" if "bienvenida" in template_name else "qa", delay=100)
+        search_term = "bien" if "bienvenida" in template_name else "qa"
+        if "url" in template_name:
+             search_term = "docu" # Specific optimization based on user codegen for this case
+        
+        self.page.locator(self.TEMPLATE_SEARCH_INPUT).type(search_term, delay=100)
         
         # Determine the dynamic selector based on the template name provided
         template_selector = f"button:has-text('{template_name}')"
@@ -118,7 +122,7 @@ class OutboundPage(BasePage):
         
         self.page.wait_for_timeout(1000)
 
-        # Handle Attachment if provided
+        # Handle Attachment (File)
         if attachment_path:
             self.logger.info(f"Uploading attachment from: {attachment_path}")
             
@@ -142,6 +146,27 @@ class OutboundPage(BasePage):
                 self.page.wait_for_timeout(2000) # Wait for upload
             except Exception as e:
                 self.logger.error(f"Error uploading attachment: {e}")
+                raise e
+        
+        # Handle Attachment (URL)
+        if attachment_url:
+            self.logger.info(f"Setting attachment URL: {attachment_url}")
+            try:
+                # Click 'escribe una URL' using text locator as per codegen
+                self.page.get_by_text("escribe una URL").click(force=True)
+                
+                # Fill the textbox
+                # Codegen used generic get_by_role("textbox"). We should be careful if there are multiple.
+                # Assuming this appears after clicking 'escribe una URL'.
+                self.page.wait_for_timeout(500)
+                # It seems it might be the only visible textbox in that context, or we can look for it.
+                # Let's try filling the focused one or the one that appeared.
+                self.page.get_by_role("textbox").last.fill(attachment_url)
+                
+                self.logger.info("Attachment URL set successfully.")
+                self.page.wait_for_timeout(1000)
+            except Exception as e:
+                self.logger.error(f"Error setting attachment URL: {e}")
                 raise e
         
         # Click 'Guardar' for Template Section

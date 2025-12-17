@@ -204,7 +204,8 @@ class ProfileView(View):
                                 "test_chat_closure": "Cierre chat mail",
                                 "test_bienvenida_rapida": "bienvenida_rapida",
                                 "test_outbound_document_agent": "qa_documento",
-                                "test_outbound_image_agent": "qa_imagen"
+                                "test_outbound_image_agent": "qa_imagen",
+                                "test_outbound_document_url_agent": "qa_documento_url"
                             }
                             
                             test['short_name'] = test_name_mapping.get(test_name, test_name)
