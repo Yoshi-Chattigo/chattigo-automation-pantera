@@ -42,20 +42,20 @@ class OutboundPage(BasePage):
 
     def select_channel(self, channel_name: str):
         self.logger.info(f"Selecting channel: {channel_name}")
-        # Wait for the second dropdown to be ready
-        self.page.wait_for_timeout(1000)
-        
-    def select_channel(self, channel_name: str):
-        self.logger.info(f"Selecting channel: {channel_name}")
         # Wait for the UI to update after campaign selection
-        self.page.wait_for_timeout(1000)
+        self.page.wait_for_timeout(2000)
         
         # Try to click the 'Seleccionar' button. 
-        # Reverting to simple selector as nth=1 failed.
-        # Assuming the campaign dropdown text changed to the selected campaign.
+        # Using a more specific context if possible, or just the generic one that appears next in flow.
+        self.logger.info("Opening Channel dropdown...")
         self.click("button:has-text('Seleccionar')", force=True)
-        self.page.wait_for_timeout(500)
-        self.click(f"p:has-text('{channel_name}')", force=True)
+        
+        # Wait for the option to appear explicitly
+        option_selector = f"p:has-text('{channel_name}')"
+        self.logger.info(f"Waiting for channel option: {option_selector}")
+        self.page.wait_for_selector(option_selector, state="visible", timeout=10000)
+        
+        self.click(option_selector, force=True)
         self.page.wait_for_timeout(1000)
 
     def upload_contact_list(self, file_path: str):
