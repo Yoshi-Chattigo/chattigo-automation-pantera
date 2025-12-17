@@ -235,7 +235,7 @@ class ProfileView(View):
                                 display_name = display_name.capitalize() # Login
                             
                             html_content += f"""
-                            <details open style="margin-bottom: 15px; border: 1px solid #444; border-radius: 5px; overflow: hidden;">
+                            <details style="margin-bottom: 15px; border: 1px solid #444; border-radius: 5px; overflow: hidden;">
                                 <summary style="background: #252525; padding: 10px; cursor: pointer; font-weight: bold; color: #ddd;">📂 {display_name}</summary>
                                 <div style="padding: 10px; background: #2d2d2d;">
                             """
@@ -243,7 +243,7 @@ class ProfileView(View):
                             for class_name, tests in classes.items():
                                 if class_name != "Sin Clase":
                                     html_content += f"""
-                                    <details open style="margin-bottom: 10px; margin-left: 10px; border-left: 2px solid #555;">
+                                    <details style="margin-bottom: 10px; margin-left: 10px; border-left: 2px solid #555;">
                                         <summary style="padding: 5px 10px; cursor: pointer; font-weight: bold; color: #aaa;">📦 {class_name}</summary>
                                         <div style="padding-left: 15px;">
                                     """
