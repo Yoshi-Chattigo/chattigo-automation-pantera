@@ -19,8 +19,11 @@ def configure_env(request):
 @pytest.fixture(scope="session")
 def browser_context():
     with sync_playwright() as p:
-        browser = p.chromium.launch(headless=Config.HEADLESS)
-        context = browser.new_context(viewport={"width": 1200, "height": 720}, locale="es-ES")
+        browser = p.chromium.launch(
+            headless=Config.HEADLESS,
+            args=["--no-sandbox", "--disable-dev-shm-usage", "--disable-gpu", "--disable-setuid-sandbox"]
+        )
+        context = browser.new_context(viewport={"width": 1280, "height": 720}, locale="es-ES")
         yield context
         browser.close()
 
