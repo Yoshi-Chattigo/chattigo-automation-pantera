@@ -51,17 +51,28 @@ class OutboundPage(BasePage):
         self.click("button:has-text('Seleccionar')", force=True)
         
         # Wait for the option to appear explicitly
-        option_selector = f"p:has-text('{channel_name}')"
-        self.logger.info(f"Waiting for channel option: {option_selector}")
-        self.page.wait_for_selector(option_selector, state="visible", timeout=10000)
+        self.logger.info(f"Waiting for channel option containing: {channel_name}")
         
-        self.click(option_selector, force=True)
+        # Use strictly generic locator + filter as per codegen to avoid specific tag issues if p changed
+        # Codegen: page.get_by_role("paragraph").filter(has_text="5215639549198").click()
+        try:
+            option_locator = self.page.get_by_role("paragraph").filter(has_text=channel_name)
+            option_locator.wait_for(state="visible", timeout=30000)
+            option_locator.click()
+        except Exception as e:
+             self.logger.warning(f"Standard click failed: {e}. Retrying with force=True")
+             self.page.get_by_role("paragraph").filter(has_text=channel_name).click(force=True)
+             
         self.page.wait_for_timeout(1000)
+        
+        # Verify selection or retry? For now, just ensuring dropdown is closed might be enough?
+        # Or simply waiting a bit more for the UI to update.
+        self.page.wait_for_timeout(2000)
 
     def upload_contact_list(self, file_path: str):
         self.logger.info(f"Uploading contact list from: {file_path}")
         # Wait for button to be visible
-        self.page.wait_for_selector(self.ATTACH_CONTACTS_BUTTON, state="visible", timeout=10000)
+        self.page.wait_for_selector(self.ATTACH_CONTACTS_BUTTON, state="visible", timeout=30000)
         self.click(self.ATTACH_CONTACTS_BUTTON)
         
         # Handle file upload using file chooser event
@@ -76,13 +87,21 @@ class OutboundPage(BasePage):
         
         # 1. Click 'Guardar' in the upload modal
         self.logger.info("Clicking first 'Guardar' (Modal)")
-        self.page.get_by_role("button", name="Guardar").click(force=True)
+        try:
+             self.page.locator("div[role='dialog'] button").filter(has_text="Guardar").click()
+        except Exception:
+             self.logger.warning("Modal Guardar not found via specific selector, trying generic.")
+             self.page.get_by_role("button", name="Guardar").first.click(force=True)
         
         self.page.wait_for_timeout(2000)
         
         # 2. Click 'Guardar' to continue (Contact List Section)
         self.logger.info("Clicking second 'Guardar' (Contact List Section)")
-        self.page.locator("#scrollbar").get_by_text("Guardar").click(force=True)
+        try:
+             self.page.locator("#scrollbar").get_by_text("Guardar").click()
+        except Exception:
+             self.logger.warning("Scrollbar Guardar not found, trying generic.")
+             self.page.get_by_role("button", name="Guardar").click(force=True)
         
         self.page.wait_for_timeout(2000)
 
@@ -105,8 +124,12 @@ class OutboundPage(BasePage):
         self.page.locator(self.TEMPLATE_SEARCH_INPUT).clear()
         # Use type with delay to ensure the frontend filter triggers correctly
         search_term = "bien" if "bienvenida" in template_name else "qa"
-        if "url" in template_name:
-             search_term = "docu" # Specific optimization based on user codegen for this case
+        if "documento_url" in template_name:
+             search_term = "docu" 
+        elif "imagen_url" in template_name:
+             search_term = "qa_imagen_url"
+        elif "video_url" in template_name:
+             search_term = "qa_video_url"
         
         self.page.locator(self.TEMPLATE_SEARCH_INPUT).type(search_term, delay=100)
         
@@ -169,9 +192,18 @@ class OutboundPage(BasePage):
                 self.logger.error(f"Error setting attachment URL: {e}")
                 raise e
         
+
+        
         # Click 'Guardar' for Template Section
         self.logger.info("Clicking 'Guardar' (Template Section)")
-        self.page.locator("a").filter(has_text="Guardar").click(force=True)
+        
+        # User requested alignment with Codegen: page.locator("a").filter(has_text="Guardar").click()
+        # Removing .last to rely on specific unique element or strict mode finding
+        try:
+             self.page.locator("a").filter(has_text="Guardar").click()
+        except Exception as e:
+             self.logger.warning(f"Strict Guardar click failed (maybe multiple?): {e}. Retrying with force=True")
+             self.page.locator("a").filter(has_text="Guardar").click(force=True)
         
         # KEY FIX: Wait for the template search input to disappear. 
         # This confirms the section closed and the next one (Agent) should appear.
@@ -180,6 +212,10 @@ class OutboundPage(BasePage):
             self.logger.info("Template section saved successfully (Search input hidden)")
         except:
              self.logger.warning("Template search input still visible? attempting to proceed anyway.")
+             # Retry click if needed
+             self.logger.info("Retrying 'Guardar' click with specific XPath...")
+             self.page.locator(guardar_xpath).click(force=True)
+             self.page.locator(self.TEMPLATE_SEARCH_INPUT).wait_for(state="hidden", timeout=5000)
         
         # Increase wait to ensure next section (Agent) renders
         self.page.wait_for_timeout(2000)
@@ -187,22 +223,28 @@ class OutboundPage(BasePage):
     def select_agent(self, agent_option: str = "Yo"):
         self.logger.info(f"Selecting agent: {agent_option}")
         self.page.keyboard.press("PageDown")
+        self.page.wait_for_timeout(2000) # Increased wait before interaction
         
         self.logger.info("Attempting to open Agent dropdown...")
-        try:
-            # Try XPath which is sometimes more robust for 'text' content in headless
-            # getting the LAST one visible
-            xpath_selector = "(//button[contains(., 'Seleccionar...')])[last()]"
-            self.page.locator(xpath_selector).click(force=True, timeout=5000)
-        except Exception as e:
-             self.logger.error(f"XPath strategy failed: {e}. Trying generic get_by_role.")
-             self.page.get_by_role("button", name="Seleccionar...").last.click(force=True)
-
-        self.page.wait_for_timeout(1000)
         
-        # Select Option
-        self.logger.info(f"Clicking agent option: {agent_option}")
-        self.page.get_by_role("button", name=agent_option).click(force=True)
+        try:
+             # Force click explicitly on the last 'Seleccionar' button which corresponds to Agent
+             self.page.get_by_role("button", name="Seleccionar...").last.click(force=True)
+             self.page.wait_for_timeout(1000)
+             
+             # Check if option is visible, if not try again
+             if not self.page.get_by_role("button", name=agent_option).is_visible():
+                  self.logger.warning("Agent option not visible, retrying dropdown click...")
+                  self.page.get_by_role("button", name="Seleccionar...").last.click(force=True)
+                  self.page.wait_for_timeout(1000)
+
+             self.logger.info(f"Clicking agent option: {agent_option}")
+             self.page.get_by_role("button", name=agent_option).click(force=True)
+             
+        except Exception as e:
+             self.logger.error(f"Error selecting agent: {e}")
+             raise e
+
         self.page.wait_for_timeout(1000)
         
         # Click 'Guardar' for Agent Section

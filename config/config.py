@@ -17,3 +17,10 @@ class Config:
     PASSWORD = os.getenv("PASSWORD", "Admin1234.")
     TIMEOUT = int(os.getenv("TIMEOUT", 10000))
     HEADLESS = os.getenv("HEADLESS", "False").lower() == "true"
+
+    class TestData:
+        VIDEO_URL = "https://cdn.pixabay.com/video/2024/12/17/247208_large.mp4"
+        PDF_URL = "https://web.seducoahuila.gob.mx/biblioweb/upload/Frankenstein%20o%20el%20moderno%20Prometeo-libro.pdf"
+        IMAGE_URL = "https://cdn.pixabay.com/photo/2025/11/06/16/25/candles-9941198_1280.jpg"
+        STATIC_URL = "https://chattigo.com/en/"
+        DYNAMIC_URL = "https://chattigo.com/en/agent/"

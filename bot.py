@@ -203,10 +203,17 @@ class ProfileView(View):
                                 "test_agent_status_break": "Activacion de estado descanso",
                                 "test_receive_email": "recibo de mail -agente",
                                 "test_chat_closure": "Cierre chat mail",
-                                "test_bienvenida_rapida": "bienvenida_rapida",
-                                "test_outbound_document_agent": "qa_documento",
-                                "test_outbound_image_agent": "qa_imagen",
-                                "test_outbound_document_url_agent": "qa_documento_url"
+                                "test_outbound_bienvenida_rapida": "bienvenida_rapida",
+                                "test_outbound_document": "qa_documento",
+                                "test_outbound_image": "qa_imagen",
+                                "test_outbound_document_url": "qa_documento_url",
+                                "test_outbound_image_url": "qa_imagen_url",
+                                "test_outbound_video_url": "qa_video_url",
+                                "test_outbound_qa_header_boton": "qa_header_boton",
+                                "test_outbound_qa_asterisco_inicio": "qa_asterisco_inicio",
+                                "test_outbound_qa_plantilla_portugues": "qa_plantilla_portugues",
+                                "test_outbound_qa_plantila_ingles": "qa_plantila_ingles",
+                                "test_outbound_qa_boton_llamar": "qa_boton_llamar"
                             }
                             
                             test['short_name'] = test_name_mapping.get(test_name, test_name)
