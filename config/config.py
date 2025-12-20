@@ -15,6 +15,12 @@ class Config:
     BASE_URL = os.getenv("BASE_URL", ENVIRONMENTS["pantera"])
     USERNAME = os.getenv("USERNAME", "agente@auto.com")
     PASSWORD = os.getenv("PASSWORD", "Admin1234.")
+    
+    # List of available users for parallel execution
+    USERS = [
+        {"email": "agente@auto.com", "password": "Admin1234."},
+        {"email": "agente_1@auto.com", "password": "Admin1234."}
+    ]
     TIMEOUT = int(os.getenv("TIMEOUT", 10000))
     HEADLESS = os.getenv("HEADLESS", "False").lower() == "true"
 

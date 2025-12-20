@@ -66,7 +66,7 @@ class ProfileView(View):
         if os.path.exists(json_report_file):
             os.remove(json_report_file)
             
-        command = f"python3 -m pytest tests/{profile} --env={self.environment} --json-report --json-report-file={json_report_file}"
+        command = f"python3 -m pytest -n 2 tests/{profile} --env={self.environment} --json-report --json-report-file={json_report_file}"
         logging.info("Ejecutando comando de pruebas: %s", command)
         
         try:

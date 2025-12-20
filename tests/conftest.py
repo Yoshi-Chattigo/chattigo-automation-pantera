@@ -8,6 +8,27 @@ def pytest_addoption(parser):
     parser.addoption("--env", action="store", default="pantera", help="Environment to run tests against: pantera, bugs, support-bugs, leones")
 
 @pytest.fixture(scope="session", autouse=True)
+def configure_user(worker_id):
+    # worker_id is 'master' (not distributed) or 'gw0', 'gw1', etc.
+    if worker_id.startswith("gw"):
+        try:
+            # Extract worker index (e.g., 'gw0' -> 0)
+            worker_index = int(worker_id.replace("gw", ""))
+            
+            # Select user based on index (modulo to wrap around if more workers than users)
+            user = Config.USERS[worker_index % len(Config.USERS)]
+            
+            # Update Config
+            Config.USERNAME = user["email"]
+            Config.PASSWORD = user["password"]
+            
+            print(f"Worker {worker_id} assigned to user: {Config.USERNAME}")
+        except Exception as e:
+            print(f"Error configuring user for worker {worker_id}: {e}")
+    else:
+        print(f"Running in master mode (no parallel), using default user: {Config.USERNAME}")
+
+@pytest.fixture(scope="session", autouse=True)
 def configure_env(request):
     env = request.config.getoption("--env")
     if env in Config.ENVIRONMENTS:
