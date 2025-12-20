@@ -22,6 +22,7 @@ def test_outbound_bienvenida_rapida(page):
     expect(page).to_have_url(re.compile(".*dashboard"), timeout=30000)
     
     # Handle initial popup
+    # Optimized in AgentDashboardPage to wait and retry if needed
     dashboard_page.handle_popup()
     
     # 2. Navigate to Outbound

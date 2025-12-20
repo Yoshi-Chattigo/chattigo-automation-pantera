@@ -23,39 +23,47 @@ class AgentDashboardPage(BasePage):
         """
         self.logger.info("Checking for popup...")
         # Give the page a moment to settle/render the popup
-        self.page.wait_for_timeout(3000)
+        # Increased wait slightly to ensure it appears if slow
+        self.page.wait_for_timeout(4000)
 
         found_button = None
         
         # Strategy 1: Specific Modal Selector (Most precise)
         try:
-            # Target the button explicitly inside the modal component to avoid 'chat-card' buttons
-            btn = self.page.locator("ch-ui-widget-generic-modal").get_by_role("button", name="Entendido")
+            # Target the button explicitly inside the modal component
+            # Use a broader locator in case the specific class changes slightly, but keep 'Entendido'
+            btn = self.page.get_by_role("button", name="Entendido")
             if btn.is_visible(timeout=3000):
                 found_button = btn
-                self.logger.info("Popup found via modal specific selector")
+                self.logger.info("Popup found via role 'button' name 'Entendido'")
         except:
             pass
 
-        # Strategy 2: User provided XPath (Fallback)
+        # Strategy 2: Fallback to generic button if role fails
         if not found_button:
-            try:
-                xpath = "/html/body/app-root/app-pages/app-main-dashboard/ch-ui-widget-generic-modal/div/div[2]/div/div[2]/div/div[1]/button"
-                btn = self.page.locator(xpath)
-                if btn.is_visible(timeout=2000):
-                    found_button = btn
-                    self.logger.info("Popup found via specific XPath")
-            except:
-                pass
+             try:
+                btn = self.page.locator("button:has-text('Entendido')")
+                if btn.is_visible(timeout=3000):
+                    found_button = btn.first
+                    self.logger.info("Popup found via generic selector")
+             except:
+                 pass
 
         if found_button:
             try:
                 self.logger.info("Clicking 'Entendido'...")
-                found_button.click()
+                # Force click to bypass potential overlays
+                found_button.click(force=True)
                 # Wait for it to disappear
                 found_button.wait_for(state="hidden", timeout=5000)
+                self.logger.info("Popup closed successfully.")
             except Exception as e:
                 self.logger.error(f"Failed to click popup: {e}")
+                # Last ditch effort: simple JS click
+                try:
+                    self.page.evaluate("(btn) => btn.click()", found_button)
+                except:
+                    pass
         else:
             self.logger.info("Popup not detected after checks.")
 

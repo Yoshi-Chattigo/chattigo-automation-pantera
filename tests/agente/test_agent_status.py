@@ -36,6 +36,7 @@ def test_agent_status_timer(login_page):
         raise
 
     dashboard_page = AgentDashboardPage(login_page.page)
+    # Optimized popup handling
     dashboard_page.handle_popup()
 
     # 3. Verify Status is Online
