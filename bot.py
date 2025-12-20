@@ -438,7 +438,18 @@ class ProfileView(View):
                 embed.set_footer(text=datetime.now().strftime("%d/%m/%y, %H:%M"))
                 
                 # Send message without error details or screenshots (as requested)
-                await interaction.followup.send(embed=embed)
+                try:
+                    await interaction.followup.send(embed=embed)
+                except discord.HTTPException as e:
+                    if e.code == 50027: # Invalid Webhook Token
+                        logging.warning("Interaction token expired. Sending to channel instead.")
+                        channel = bot.get_channel(interaction.channel_id)
+                        if channel:
+                           await channel.send(f"<@{interaction.user.id}>", embed=embed)
+                        else:
+                            logging.error("Could not find channel to send fallback message.")
+                    else:
+                        raise e
                 
             except asyncio.TimeoutError:
                 try:
