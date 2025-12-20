@@ -32,7 +32,7 @@ class LoginPage(BasePage):
                 try:
                     # Wait for either dashboard URL OR an error message
                     # We expect dashboard
-                    self.page.wait_for_url(re.compile(".*dashboard"), timeout=15000)
+                    self.page.wait_for_url(re.compile(".*dashboard"), timeout=30000)
                     self.logger.info(f"Login successful on attempt {attempt}")
                     return
                 except:
