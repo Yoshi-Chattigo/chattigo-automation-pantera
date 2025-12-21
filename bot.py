@@ -531,6 +531,15 @@ async def auto(interaction: discord.Interaction):
     view = EnvironmentView()
     await interaction.followup.send("Selecciona el ambiente para las pruebas:", view=view)
 
+@bot.tree.command(name="ping", description="Verifica si el bot está vivo")
+async def ping(interaction: discord.Interaction):
+    await interaction.response.send_message("Pong! 🏓 Estoy vivo.", ephemeral=True)
+
+@bot.event
+async def on_interaction(interaction: discord.Interaction):
+    logging.info(f"Interaction received: {interaction.type} (ID: {interaction.id}) from {interaction.user}")
+    # No need to process manually, tree handles it, but this logs receipt.
+
 async def main():
     if not TOKEN:
         print("Error: DISCORD_TOKEN no encontrado en variables de entorno.")
