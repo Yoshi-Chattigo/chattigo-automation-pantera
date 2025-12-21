@@ -87,6 +87,11 @@ class ProfileView(View):
                 returncode = process.returncode
                 
                 logging.info("Resultado de pytest: returncode=%s", returncode)
+                if returncode != 0:
+                    logging.error("Validating pytest failure. STDERR: %s", stderr)
+                    logging.error("Validating pytest output. STDOUT: %s", stdout)
+                else:
+                    logging.info("Pytest finished successfully. STDOUT: %s", stdout)
                 
                 # Initialize stats
                 passed = 0
