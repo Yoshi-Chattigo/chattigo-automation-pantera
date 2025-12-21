@@ -37,26 +37,21 @@ def configure_env(request):
         # Fallback or custom URL handling if needed
         pass
 
-@pytest.fixture(scope="session")
-def browser_instance():
+@pytest.fixture(scope="function")
+def browser_context():
+    # Strict Isolation: Launch a NEW browser process for EVERY test
     with sync_playwright() as p:
         browser = p.chromium.launch(
             headless=Config.HEADLESS,
             args=["--no-sandbox", "--disable-dev-shm-usage", "--disable-gpu", "--disable-setuid-sandbox"]
         )
-        yield browser
+        context = browser.new_context(viewport={"width": 1280, "height": 720}, locale="es-ES")
+        yield context
         browser.close()
 
 @pytest.fixture(scope="function")
-def context(browser_instance):
-    # Create a fresh context for each test (equivalent to incognito/new profile)
-    context = browser_instance.new_context(viewport={"width": 1280, "height": 720}, locale="es-ES")
-    yield context
-    context.close()
-
-@pytest.fixture(scope="function")
-def page(context):
-    page = context.new_page()
+def page(browser_context):
+    page = browser_context.new_page()
     yield page
     page.close()
 
