@@ -19,76 +19,61 @@ class AgentDashboardPage(BasePage):
     def handle_popup(self):
         """
         Checks if the 'Entendido' popup is visible and clicks it.
-        Waits a short time for it to appear, but doesn't fail if it's not there.
+        Uses a polling loop to handle variable appearance times (especially for agente_1).
         """
-        self.logger.info("Checking for popup...")
-        # Give the page a moment to settle/render the popup
-        # Increased wait slightly to ensure it appears if slow
-        self.page.wait_for_timeout(4000)
-
-        found_button = None
+        self.logger.info("Starting popup handling loop (10s)...")
+        start_time = time.time()
+        timeout = 10
         
-        # Strategy 1: Specific Modal Selector (Most precise)
-        try:
-            # Target the button explicitly inside the modal component
-            # Use a broader locator in case the specific class changes slightly, but keep 'Entendido'
-            btn = self.page.get_by_role("button", name="Entendido")
-            if btn.is_visible(timeout=3000):
-                found_button = btn
-                self.logger.info("Popup found via role 'button' name 'Entendido'")
-        except:
-            pass
-
-
-        # Strategy 2: User provided XPath (Fallback) - "Entendido" Button
-        if not found_button:
-            try:
-                xpath_ok = "/html/body/app-root/app-pages/app-main-dashboard/ch-ui-widget-generic-modal/div/div[2]/div/div[2]/div/div[1]/button"
-                btn = self.page.locator(xpath_ok)
-                if btn.is_visible(timeout=3000):
-                    found_button = btn
-                    self.logger.info("Popup found via user provided XPath (OK button)")
-            except:
-                pass
-
-        # Strategy 3: User provided XPath (Fallback) - "Close" (X) Button
-        if not found_button:
-            try:
-                xpath_close = "/html/body/app-root/app-pages/app-main-dashboard/ch-ui-widget-generic-modal/div/div[2]/button/span"
-                btn = self.page.locator(xpath_close)
-                if btn.is_visible(timeout=3000):
-                    found_button = btn
-                    self.logger.info("Popup found via user provided XPath (Close button)")
-            except:
-                pass
-
-        # Strategy 4: Fallback to generic button if role fails
-        if not found_button:
+        while time.time() - start_time < timeout:
+             found_button = None
+             
+             # Strategy 1: Specific Modal Selector (Most precise)
              try:
-                btn = self.page.locator("button:has-text('Entendido')")
-                if btn.is_visible(timeout=3000):
-                    found_button = btn.first
-                    self.logger.info("Popup found via generic selector")
+                 btn = self.page.get_by_role("button", name="Entendido")
+                 if btn.is_visible():
+                     found_button = btn
+                     self.logger.info("Popup found via role 'button' name 'Entendido'")
              except:
                  pass
-
-        if found_button:
-            try:
-                self.logger.info("Clicking 'Entendido'...")
-                # Force click to bypass potential overlays
-                found_button.click(force=True)
-                # Wait for it to disappear
-                found_button.wait_for(state="hidden", timeout=5000)
-                self.logger.info("Popup closed successfully.")
-            except Exception as e:
-                self.logger.error(f"Failed to click popup: {e}")
-                # Last ditch effort: simple JS click
-                try:
-                    self.page.evaluate("(btn) => btn.click()", found_button)
-                except:
-                    pass
-        else:
-            self.logger.info("Popup not detected after checks.")
+     
+             # Strategy 2: User provided XPath (Fallback) - "Entendido" Button
+             if not found_button:
+                 try:
+                     xpath_ok = "/html/body/app-root/app-pages/app-main-dashboard/ch-ui-widget-generic-modal/div/div[2]/div/div[2]/div/div[1]/button"
+                     btn = self.page.locator(xpath_ok)
+                     if btn.is_visible():
+                         found_button = btn
+                         self.logger.info("Popup found via user provided XPath (OK button)")
+                 except:
+                     pass
+     
+             # Strategy 3: User provided XPath (Fallback) - "Close" (X) Button
+             if not found_button:
+                 try:
+                     xpath_close = "/html/body/app-root/app-pages/app-main-dashboard/ch-ui-widget-generic-modal/div/div[2]/button/span"
+                     btn = self.page.locator(xpath_close)
+                     if btn.is_visible():
+                         found_button = btn
+                         self.logger.info("Popup found via user provided XPath (Close button)")
+                 except:
+                     pass
+             
+             # Action
+             if found_button:
+                 try:
+                     self.logger.info("Clicking popup button...")
+                     found_button.click(force=True)
+                     found_button.wait_for(state="hidden", timeout=5000)
+                     self.logger.info("Popup closed successfully.")
+                     return # Exit loop if closed
+                 except Exception as e:
+                     self.logger.warning(f"Failed to click popup: {e}. Retrying...")
+             
+             # Wait a bit before next check
+             self.page.wait_for_timeout(500)
+             
+        self.logger.info("Popup detection loop ended. No popup found or closed.")
 
     def is_chats_header_visible(self) -> bool:
         # Wait for the header to be visible
