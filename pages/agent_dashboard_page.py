@@ -39,7 +39,30 @@ class AgentDashboardPage(BasePage):
         except:
             pass
 
-        # Strategy 2: Fallback to generic button if role fails
+
+        # Strategy 2: User provided XPath (Fallback) - "Entendido" Button
+        if not found_button:
+            try:
+                xpath_ok = "/html/body/app-root/app-pages/app-main-dashboard/ch-ui-widget-generic-modal/div/div[2]/div/div[2]/div/div[1]/button"
+                btn = self.page.locator(xpath_ok)
+                if btn.is_visible(timeout=3000):
+                    found_button = btn
+                    self.logger.info("Popup found via user provided XPath (OK button)")
+            except:
+                pass
+
+        # Strategy 3: User provided XPath (Fallback) - "Close" (X) Button
+        if not found_button:
+            try:
+                xpath_close = "/html/body/app-root/app-pages/app-main-dashboard/ch-ui-widget-generic-modal/div/div[2]/button/span"
+                btn = self.page.locator(xpath_close)
+                if btn.is_visible(timeout=3000):
+                    found_button = btn
+                    self.logger.info("Popup found via user provided XPath (Close button)")
+            except:
+                pass
+
+        # Strategy 4: Fallback to generic button if role fails
         if not found_button:
              try:
                 btn = self.page.locator("button:has-text('Entendido')")

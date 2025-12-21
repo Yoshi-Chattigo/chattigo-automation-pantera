@@ -38,19 +38,25 @@ def configure_env(request):
         pass
 
 @pytest.fixture(scope="session")
-def browser_context():
+def browser_instance():
     with sync_playwright() as p:
         browser = p.chromium.launch(
             headless=Config.HEADLESS,
             args=["--no-sandbox", "--disable-dev-shm-usage", "--disable-gpu", "--disable-setuid-sandbox"]
         )
-        context = browser.new_context(viewport={"width": 1280, "height": 720}, locale="es-ES")
-        yield context
+        yield browser
         browser.close()
 
 @pytest.fixture(scope="function")
-def page(browser_context):
-    page = browser_context.new_page()
+def context(browser_instance):
+    # Create a fresh context for each test (equivalent to incognito/new profile)
+    context = browser_instance.new_context(viewport={"width": 1280, "height": 720}, locale="es-ES")
+    yield context
+    context.close()
+
+@pytest.fixture(scope="function")
+def page(context):
+    page = context.new_page()
     yield page
     page.close()
 
