@@ -441,8 +441,10 @@ class ProfileView(View):
                 try:
                     await interaction.followup.send(embed=embed)
                 except discord.HTTPException as e:
-                    if e.code == 50027: # Invalid Webhook Token
-                        logging.warning("Interaction token expired. Sending to channel instead.")
+                    # 50027: Invalid Webhook Token
+                    # 10062: Unknown Interaction
+                    if e.code == 50027 or e.code == 10062: 
+                        logging.warning(f"Interaction error {e.code}. Sending to channel instead.")
                         channel = bot.get_channel(interaction.channel_id)
                         if channel:
                            await channel.send(f"<@{interaction.user.id}>", embed=embed)
